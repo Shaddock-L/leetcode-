@@ -340,7 +340,7 @@ https://leetcode.cn/problems/find-root-of-n-ary-tree/description/?envType=study-
 
   
 方法1：死做，对每个节点进行bfs，看当前节点能不能遍历到所有节点（size == cnt)。复杂度 O(n^2) 超时
-```
+```python3
 """
 # Definition for a Node.
 class Node:
@@ -370,7 +370,7 @@ class Solution:
 ```
 
 方法2：利用树的性质，root不会出现在children里，所以遍历所有节点的children，加入一个set，再和原set取差集，剩下的就是root
-```
+```python3
 class Solution:
     def findRoot(self, tree: List['Node']) -> 'Node': 
         s1 = set(tree)
