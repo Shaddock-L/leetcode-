@@ -397,3 +397,55 @@ class Solution:
                 return n
         return 
 ```
+
+## 6 #1522   【树/BFS/DFS】
+记录高度，最长路径是子节点中最max的2条高度的和。由于是N叉树，所以计算高度时取所有子节点中高度最高的+1。最后过该节点的最长2条（或只有1条）子节点高度的和就是最大路径长度。  
+利用字典记录节点高度。  
+```python3
+"""
+# Definition for a Node.
+class Node:
+    def __init__(self, val=None, children=None):
+        self.val = val
+        self.children = children if children is not None else []
+"""
+
+class Solution:
+    def diameter(self, root: 'Node') -> int:
+        """
+        :type root: 'Node'
+        :rtype: int
+        """
+        #记录高度，最长路径是子节点中最max的2条高度的和
+        #即通过该节点的，最大路径长度
+        depthdic = defaultdict(int)
+
+        def dfs(node):
+            nonlocal depthdic
+            if node == None:
+                return 0 
+            ret = [dfs(kid) for kid in node.children]
+            if  len(ret) == 0:
+                depth = 1 
+            else:
+                print(ret)
+                depth = max(ret) + 1  
+            depthdic[node] = depth   
+            return depth
+        dfs(root)
+        ans = 0 
+        q = [root]
+        while q:
+            node = q.pop(0)
+            temp = []
+            for kid in node.children:
+                temp.append(depthdic[kid])
+                q.append(kid)
+            
+            if len(temp) > 0:
+                if len(temp) < 2:
+                    ans = max(ans, temp[0])
+                else:
+                    ans = max(sum(heapq.nlargest(2, temp)), ans)
+        return ans
+```
