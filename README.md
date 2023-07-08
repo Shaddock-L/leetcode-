@@ -622,3 +622,31 @@ class StringIterator:
         self.size = len(self.s)
     略....
 ```
+
+## 5 #1236. 【字符串/BFS】
+ https://leetcode.cn/problems/web-crawler/description/  
+ 没啥好说的，就是简单的BFS。只不过数据结构变成了给你一个接口，达到返回类似接邻表的目的。
+
+```python3 
+#class HtmlParser(object):
+#    def getUrls(self, url):
+#        """
+#        :type url: str
+#        :rtype List[str]
+#        """
+
+class Solution:
+    def crawl(self, startUrl: str, htmlParser: 'HtmlParser') -> List[str]:
+        domain = "http://" + startUrl.split('/')[2]
+        q = deque([startUrl])
+        res = set()
+
+        while q:
+            link = q.popleft()
+            res.add(link)
+            for url in htmlParser.getUrls(link):
+                if url.startswith(domain) and url not in res:
+                    q.append(url)
+        return list(res)
+        
+```
