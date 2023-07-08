@@ -598,3 +598,27 @@ class Solution:
             return True 
         return backtrace(source)
 ```
+## 4 #604.  【设计/数组/字符串】
+https://leetcode.cn/problems/design-compressed-string-iterator/description/  
+常规做法：把字符串解码了，变成普通字符串
+
+```python3 
+class StringIterator:
+    def __init__(self, cs: str):
+        self.sa = []
+        self.cur = 0
+        num = 0
+        c = cs[0]
+        for i in range(len(cs)):  
+            if cs[i].isdigit():
+                num = num * 10 + int(cs[i])
+            else:
+                if num != 0:
+                    self.sa.append(c*num)
+                num = 0
+                c = cs[i]
+        self.sa.append(c*num)
+        self.s = ''.join(self.sa)
+        self.size = len(self.s)
+    略....
+```
