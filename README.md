@@ -449,3 +449,152 @@ class Solution:
                     ans = max(sum(heapq.nlargest(2, temp)), ans)
         return ans
 ```
+
+# 2023年7月8日 \<Video Games Day\>
+
+
+<table><tr><td bgcolor=yellow><font face="黑体" color=green size=5>周末摆烂偷懒😶</font></td></tr></table>
+
+## 1 #167 【双指针/哈希表】
+方法1：有序数组，直接双指针左右找  
+方法2：哈希表记录，遇到target-current在表内时直接返回  
+两种方法差不多，复杂度都是O(n)  
+```python3
+class Solution:
+    def twoSum(self, numbers: List[int], target: int) -> List[int]:
+        l = 0
+        r = len(numbers) - 1
+        while l < r:
+            if numbers[l] + numbers[r] == target:
+                return [l+1,r+1]
+            elif numbers[l] + numbers[r] < target:
+                l += 1
+            else:
+                r -= 1
+        return [0,0]
+
+        """
+        #方法2
+        dic = {}
+        for i, n in enumerate(numbers):
+            find = target - n  
+            if find in dic:
+                return [dic[find], i+1]
+            dic[n] = i+1
+        """
+```
+  
+## 2 #582
+  https://leetcode.cn/submissions/detail/445207244/  
+比较明显的并查集题目。  
+心得：可以用哈希表模拟并查集，少些一点代码。  
+<font face="黑体" color=orange size=2>常规做法</font>
+```python3
+class UnionFind:
+    def __init__(self, n):
+        self.n = n    
+        self.parent = list(range(n))
+        
+    def find(self,x):
+        if self.parent[x] != x:
+            self.parent[x] = self.find(self.parent[x])
+        return self.parent[x]
+        
+    #本题中 y 已经是 x 父节点，只要把X并入Y即可
+    def union(self,x,y):
+        rootX = self.find(x)    
+        self.parent[rootX] = y 
+        return True 
+
+class Solution:
+    def killProcess(self, pid: List[int], ppid: List[int], kill: int) -> List[int]:
+        n = max(pid) + 1
+        UF = UnionFind(n)
+        for x, y in zip(pid, ppid):
+            UF.union(x, y)
+        UF.parent[kill] = -1
+        ans = []
+        for k in pid:
+            r = UF.parent[k]   
+            while r != 0 and r != -1:
+                r = UF.parent[r]
+            #从k 可以联通到 kill
+            if r == -1:
+                ans.append(k)
+        return ans 
+```  
+<font face="黑体" color=orange size=2>hash table做法</font>
+```python3
+class Solution:
+    def killProcess(self, pid: List[int], ppid: List[int], kill: int) -> List[int]:
+        parent = defaultdict(int)    
+        for x, y in zip(pid, ppid):
+            parent[x] = y 
+        parent[kill] = -1
+        ans = []
+        for k in parent:
+            r = k  
+            while r != 0 and r != -1:
+                r = parent[r]
+            if r == -1:
+                ans.append(k)
+        return ans 
+```
+
+## 3 #1059. 【图/DFS/拓扑】  
+https://leetcode.cn/problems/all-paths-from-source-lead-to-destination/  
+方法1：拓扑排序。由接邻表建图。同时用一个数组记录所有节点的入度。从终点反向搜索，搜索的同时减少入度。如果搜到起点后，起点的入度也为零，则成功，否则返回False。
+
+```python3
+class Solution:
+    def leadsToDestination(self, n: int, edges: List[List[int]], source: int, destination: int) -> bool:
+        g = defaultdict(list)
+        degree = [0] * n 
+        for x, y in edges:
+            g[y].append(x)
+            degree[x] += 1
+
+        if degree[destination]:
+            # 题目问的是 最终结束于， 所以不能有出度
+            return False 
+        # q存放的是 出度为 0 的节点，只有当SOURCE的出度也更新为0时，才算满足题目条件
+        q = deque([destination])
+        # q = [destination]
+        while q:
+            # node = q.pop(0)
+            node = q.pop()
+            if node == source:
+                return True 
+            for newNode in g[node]:
+                degree[newNode] -= 1
+                if degree[newNode] == 0:
+                    # q.append(newNode)
+                    q.appendleft(newNode)
+        return False 
+```
+方法2： 回溯
+这个方法要注意 图中有没有环，不能单纯dfs，不然会陷入死循环  【得加记忆化 不然超时，加了就超快, 因为很多节点在之前的循环中已经被访问过，而访问过后之后的内容是不会变的，完全一样的】
+```python3
+class Solution:
+    def leadsToDestination(self, n: int, edges: List[List[int]], source: int, destination: int) -> bool:
+        g = defaultdict(list)
+        for x, y in edges:
+            g[x].append(y)
+        if destination in g:
+            return False 
+        visit = [False for _ in range(n)]
+        visit[source] = True 
+        @cache
+        def backtrace(x):
+            if len(g[x]) == 0:
+                return x == destination  
+            for y in g[x]:
+                if visit[y]:
+                    return False 
+                visit[y] = True 
+                if not backtrace(y):
+                    return False 
+                visit[y] = False 
+            return True 
+        return backtrace(source)
+```
