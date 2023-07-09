@@ -650,3 +650,167 @@ class Solution:
         return list(res)
         
 ```
+
+# 2023年7月9日 
+## 1
+## 2
+## 3
+周赛3题，内容未放出暂略。  
+心得：别复制黏贴！！！大段的类似的代码，很容易改错！！！题目3因为一个nums2没改成nums1导致debug很久没发现问题！！！  
+
+## 4 #15.   【排序/双指针】
+https://leetcode.cn/problems/3sum/description/  
+因为题目要求不能有重复的三元组，所以先排序，然后双指针左右两端找，比较传统的思路。  
+双指针遇到连续重复的数字直接跳过，加速遍历。
+```python3
+class Solution:
+    def threeSum(self, nums: List[int]) -> List[List[int]]:
+        ans = []
+        n = len(nums)
+        if n < 3:
+            return []
+        nums.sort()
+        for i in range(n):
+            if nums[i] > 0:
+                return ans   
+            if i > 0 and nums[i] == nums[i-1]:
+                continue   
+            l = i + 1
+            r = n - 1
+            while l < r:
+                if nums[i] + nums[l] + nums[r] == 0:
+                    
+                    ans.append([ nums[i], nums[l] , nums[r]])
+                    while l < r and nums[l] == nums[l+1]:
+                        l += 1
+                    while l < r and nums[r] == nums[r-1]:
+                        r -= 1
+                    l += 1
+                    r -= 1
+                elif nums[i] + nums[l] + nums[r] > 0:
+                    r -= 1
+                else:
+                    l += 1
+        return ans 
+```
+
+## 5 #305 【图/并查集】
+https://leetcode.cn/problems/number-of-islands-ii/description/?envType=study-plan-v2&envId=premium-algo-100
+
+并查集乱杀。逐步并查就可以，在遇到一个新陆地的时候，看看四周是否是陆地，如果是陆地的话，看看他们的根是不是同一个，然后再把岛屿数量减去相应的数值。
+
+
+```python3 
+class UnionFind():
+    def __init__(self, n):
+        self.n = n
+        self.parent = list(range(n))
+        self.rank = [1 for _ in range(n)]
+        self.cnt = n
+    
+    def find(self, x):
+        # 找到最上面的根
+        if self.parent[x] != x:
+            self.parent[x] = self.find(self.parent[x])
+        return self.parent[x]
+    
+    def union(self,x,y):
+        rootX, rootY = self.find(x), self.find(y)
+        if rootX == rootY:
+            #同根，不需要合并了
+            return False
+        # 保持rootX的rank 比 rootY 低，因为想把rootX 并到rootY上
+        if self.rank[rootX] > self.rank[rootY]:
+            rootX, rootY = rootY, rootX
+        self.parent[rootX] = rootY
+        self.rank[rootY] += self.rank[rootX]
+        # 2合1， group数量少一个了
+        
+        # 并！
+        return True 
+
+class Solution:
+    def numIslands2(self, m: int, n: int, positions: List[List[int]]) -> List[int]:
+        def valid(x,y):
+            return 0 <= x < m and 0 <= y < n
+        
+        UF = UnionFind(m*n)
+        g = [[0 for _ in range(n)] for _ in range(m)]
+        cnt = 0
+        ans = []
+        dirs = [(1,0),(0,1),(-1,0),(0,-1)]
+        for x,y in positions:
+            if g[x][y] == 1:
+                ans.append(cnt)
+                continue
+            g[x][y] = 1
+            tempParent = set()
+            for dx, dy in dirs:
+                nx, ny = x + dx, y + dy   
+                if valid(nx,ny) and g[nx][ny] == 1:
+                    tempParent.add(UF.find(nx * n + ny))
+            cnt += 1 - len(tempParent)
+            ans.append(cnt)
+            for p in tempParent:
+                UF.union(x*n+y, p)
+        return ans 
+```
+
+## 6 694. 【DFS/BFS】
+https://leetcode.cn/problems/number-of-distinct-islands/description/  
+方法一： 尝试使用并查集，并用元组(1,0),(0,1)代表方向，记录方向，达到定义岛屿的目的， 失败！！问题暂时没找到，先贴出代码，回头看。
+```python3 
+class Solution:
+    def numDistinctIslands(self, grid: List[List[int]]) -> int:
+        m, n = len(grid), len(grid[0])
+        def valid(x,y):
+            return 0 <= x < m and 0 <= y < n
+        UF = UnionFind(m*n)
+        dirs = [(0,1),(1,0)]
+        path = defaultdict(list)
+        for i in range(m):
+            for j in range(n):
+                if grid[i][j] == 1:
+                    p = UF.find(i * n + j)
+                    if path[p] == []:
+                        path[p].append((0,0))
+                    for dx, dy in dirs:
+                        nx = i + dx
+                        ny = j + dy   
+                        if valid(nx,ny) and grid[nx][ny] == 1:
+                            UF.union(nx*n + ny, i * n + j)
+                            
+                            path[p].append((dx,dy))
+        ans = []
+        for v in path.values():
+            if v not in ans:
+                ans.append(v)
+        return len(ans)
+```
+
+方法2：DFS记录方向，搜过的区域置零，防止反复被搜，用set去重，看最终set大小。
+```python3
+class Solution:
+    def numDistinctIslands(self, grid: List[List[int]]) -> int:
+        dirs = ((1,0),(0,1),(-1,0),(0,-1))
+        m,n = len(grid), len(grid[0])
+        def valid(x,y):
+            return 0 <= x < m and 0 <= y < n
+        def dfs(x,y):
+            grid[x][y] = 0
+            for i, [dx,dy] in enumerate(dirs):
+                nx,ny = x + dx, y + dy   
+                nonlocal path
+                path += str(i)  
+                if valid(nx,ny) and grid[nx][ny] == 1:
+                    dfs(nx,ny)
+        
+        ans = set()
+        for i in range(m):
+            for j in range(n):
+                if grid[i][j] == 1:
+                    path = ""
+                    dfs(i,j)
+                    ans.add(path)
+        return len(ans)
+```
