@@ -814,3 +814,14 @@ class Solution:
                     ans.add(path)
         return len(ans)
 ```
+
+## 7 169 【数学/排序】
+https://leetcode.cn/problems/majority-element/description/   
+求数量大于 n//2的数， 直接排序，中间的必然是。
+```python3
+class Solution:
+    def majorityElement(self, nums: List[int]) -> int:
+        n = len(nums)
+        nums.sort()
+        return nums[n//2]
+```
