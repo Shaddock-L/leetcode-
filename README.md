@@ -825,3 +825,127 @@ class Solution:
         nums.sort()
         return nums[n//2]
 ```
+
+# 2023年7月10日   
+
+## 1 #16. 【双指针/排序】
+https://leetcode.cn/problems/3sum-closest/description/  
+和昨天每日一题一个套路。确定一个位置， 从它往后开始双指针找符合条件的值。  
+进行几处优化  
+1, 因为原数组经过排序，所以 连续3个数之和大于target之后，即可判断答案，直接跳出循环，后面和只会更大。  
+2，因为原数组经过排序，所以当前数字+最后两个数字要是小于target，没有别的能更接近target了，直接判断，然后continue。
+```python3
+class Solution:
+    def threeSumClosest(self, nums: List[int], target: int) -> int:
+        n = len(nums)
+        nums.sort()
+        if n < 4:
+            return sum(nums)
+        cur_min = float("inf")
+        ans = 0
+        for i in range(n-2):
+            x = nums[i]
+            if i and nums[i] == nums[i-1]:
+                continue 
+            s = x + nums[i+1] + nums[i+2]
+            if s > target:
+                if s - target < cur_min:
+                    return s
+                break   
+            s = x + nums[-1] + nums[-2]
+            if s < target:
+                if target - s < cur_min:
+                    cur_min = target - s
+                    ans = s     
+                continue   
+            l, r = i+1, n - 1
+            while l < r:
+                s = x + nums[l] + nums[r]
+                if s == target:
+                    return s   
+                if s > target:
+                    if s - target < cur_min:
+                        cur_min = s - target   
+                        ans = s  
+                    r -= 1
+                elif s < target:
+                    if target - s < cur_min:
+                        cur_min = target - s    
+                        ans = s 
+                    l += 1
+        return ans 
+
+```
+
+## 2 #1136 【拓扑序/图/BFS】
+https://leetcode.cn/problems/parallel-courses/description/?envType=study-plan-v2&envId=premium-algo-100  
+有previous限制条件，直接想到拓扑排序。利用bfs计算次数。建图时直接判断有无互为前置课程。  
+最后计算degree的sum来判断是否存在环，如果存在环，则有些节点不会被访问过，所以degree不会为0.
+
+```python3 
+class Solution:
+    def minimumSemesters(self, n: int, relations: List[List[int]]) -> int:
+        #利用一个数组记录出度，出度为0的可以上，
+        #用字典建图，记录 当前节点的来源，如果该节点被修完，它的来源节点的degree -= 1
+        #如果有环，则无法完成
+        degree = [0] * n 
+        g = defaultdict(list)
+        for x,y in relations:
+            g[y-1].append(x-1)
+            if y-1 in g[x-1]:
+                #有环
+                return -1 
+            degree[x-1] += 1    
+        cnt = 0
+        print(degree)
+        q = [i for i in range(n) if degree[i] == 0]
+        while q:
+            size = len(q)
+            cnt += 1
+            while size > 0:
+                size -= 1
+                cur = q.pop(0)
+                for p in g[cur]:
+                    degree[p] -= 1
+                    if degree[p] == 0:
+                        q.append(p)
+        if sum(degree) != 0:
+            return -1 
+        return cnt 
+```
+
+## 3 #1494 【状态压缩/DFS/递归】
+https://leetcode.cn/problems/parallel-courses-ii/description/   
+
+前置知识：关于集合和位运算的代码实现，参考灵神笔记。https://leetcode.cn/circle/discuss/CaOJ45/  
+头好痒，好像有什么东西要长出来了😀  
+```python3
+class Solution:
+    def minNumberOfSemesters(self, n: int, relations: List[List[int]], k: int) -> int:
+        pre1 = [0] * n 
+        for x,y in relations:
+            pre1[y-1] |= 1 << (x-1)
+        
+        u = (1<<n) - 1
+
+        @cache    
+        def dfs(i):
+            if i == 0:
+                return 0
+            ci = u ^ i
+            i1 = 0
+            for j,p in enumerate(pre1):
+                if i >> j &1 and p | ci == ci:
+                    i1 |= 1 << j    
+            if i1.bit_count() <= k:
+                return dfs(i ^ i1) + 1
+            
+            res = inf  
+            j = i1 
+            while j:
+                if j.bit_count() == k:
+                    res = min(res, dfs(i ^j) + 1)
+                j = (j-1) & i1   
+            return res   
+        return dfs(u)
+```
