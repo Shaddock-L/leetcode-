@@ -949,3 +949,205 @@ class Solution:
             return res   
         return dfs(u)
 ```
+
+# 2023年7月11日  
+
+## 1 #505 【BFS/DFS/最短路径】  
+https://leetcode.cn/problems/the-maze-ii/?envType=study-plan-v2&envId=premium-algo-100
+
+方法1：
+bfs硬搜会出现问题，因为碰墙次数少的走法不一定路径是最短的。借鉴dijkstra算法，每次走到一个点，要和它之前离起点的距离（初始为inf）作比较，如果比之前的小，则更新距离，入队继续bfs，否则不入队。  
+进一步优化可以用优先队列来实现dijkstra算法，这样每次出队的都是目前离起点最近的一个点。
+
+```python3
+class Solution:
+    def shortestDistance(self, maze: List[List[int]], start: List[int], destination: List[int]) -> int:
+        m, n = len(maze), len(maze[0])
+        if maze[start[0]][start[1]] == 1 or maze[destination[0]][destination[1]] == 1:
+            return False
+        q1 = [(start[0], start[1])]
+        dirs = [(1,0),(-1,0),(0,1),(0,-1)]
+        dist = [[float('inf') for _ in range(n)] for _ in range(m)]
+        dist[start[0]][start[1]] =0
+        while q1:
+            size = len(q1)
+            while size:
+                size -= 1
+                x,y = q1.pop(0)
+                for dx, dy in dirs:
+                    nx, ny = x, y
+                    cnt = 0
+                    while 0 <= nx + dx < m and 0 <= ny + dy < n and maze[nx+dx][ny+dy] == 0 :
+                        cnt += 1
+                        nx += dx   
+                        ny += dy  
+                    if dist[x][y] + cnt < dist[nx][ny]:
+                        dist[nx][ny] = dist[x][y] + cnt
+                        q1.append((nx,ny))
+        if dist[destination[0]][destination[1]] == float("inf"):
+            return -1
+        return dist[destination[0]][destination[1]]
+```
+
+<font face="黑体" color=#00FFFF size=8>做了好几天图，今天强化一下DP</font>  
+  
+## 2 #70. 【DP/数学/记忆化】  
+https://leetcode.cn/problems/climbing-stairs/  
+
+入门级dp，不多说，走一步时看前一步，走两步时看前两步。
+```python3
+class Solution:
+    def climbStairs(self, n: int) -> int:
+        #dp[i][0]:走1阶梯，  dp[i][1]：走2阶梯
+        if n == 1:
+            return 1
+        dp = [[0,0] for _ in range(n)]
+        dp[0][0] = 1
+        dp[1][0] = 1
+        dp[1][1] = 1
+        for i in range(2,n):
+            dp[i][0] = dp[i-1][0] + dp[i-1][1]
+            dp[i][1] = dp[i-2][0] + dp[i-2][1]
+            #可以定义成dp[i], 那样就整合成dp[i] = dp[i-1] + dp[i-1],我这边为了明显所以拆开了
+        return dp[-1][0] + dp[-1][1]
+```
+
+## 3 #198 【dp】
+思路一样的，就是看上一项，上两项。一维数组，二维数组都行。
+#https://leetcode.cn/problems/house-robber/description/
+
+```python3
+class Solution:
+    def rob(self, nums: List[int]) -> int:
+        n = len(nums)
+        if n < 3:
+            return max(nums)
+        # # DP[I][x]: x == 0:拿   x== 1： 不拿
+        # dp = [[0,0] for _ in range(n)]
+        
+        # dp[0][0] = nums[0]
+        # dp[1][0] = nums[1]
+        # dp[1][1] = nums[0]
+        # for i in range(2,n):
+        #     dp[i][0] = dp[i-1][1] + nums[i]
+        #     dp[i][1] = max(dp[i-1][0],dp[i-1][1])
+        # return max(dp[-1])
+
+        # f = [0 for _ in range(n)]
+        # # f[i]: 在i家取得的最大财富
+        # f[0] = nums[0]
+        # f[1] = max(nums[0], nums[1])
+        # for i in range(2,n):
+        #     f[i] = max(f[i-1], f[i-2] + nums[i])
+
+        # return f[-1]
+        
+        #再简化，维护2个值而不是数组
+        prev = nums[0]
+        cur = max(prev,nums[1])
+        for i in range(2,n):
+            temp = cur
+            cur = max(cur, prev+nums[i])
+            prev = temp  
+        return cur
+```
+
+## 4 #1911 【dp】  
+https://leetcode.cn/problems/maximum-alternating-subsequence-sum/description/  
+
+选择当前数作为最后一位，如果下标是偶数，那么就是max(前一项是奇数 + 当前值 【选择】， 前一项是偶数【不选】)。 如果下标是奇数，那么就是max（前一项是偶数-当前值【选择】，前一项是奇数【不选】）。
+还有一种方法是看波峰波谷。加上波峰，减去波谷，这种方法要注意边界条件【头和尾】
+```python3
+class Solution:
+    def maxAlternatingSum(self, nums: List[int]) -> int:
+        even, odd = nums[0], 0 
+        for i in range(1,len(nums)):
+            even, odd = max(even, odd + nums[i]), max(odd, even - nums[i])
+        return even
+```
+## 5 #213. 【dp】
+https://leetcode.cn/problems/house-robber/  
+选当前一家，或不选，两种情况。维护两个int来优化空间。和198一样。只不过头尾不能同时取，所以分成有头无尾情况 和有尾无头情况讨论
+```python3
+class Solution:
+    def rob(self, nums: List[int]) -> int:
+        if len(nums) == 1:
+            return nums[0]
+        def help(arr):
+            n = len(arr)
+            if n < 3:
+                return max(arr)
+            prev = arr[0]
+            cur = max(prev,arr[1])
+            for i in range(2,n):
+                temp = cur        
+                #如果要
+                cur = max(prev+arr[i], cur)   
+                prev = temp  
+            return cur 
+
+        return max(help(nums[:-1]), help(nums[1:]))
+```
+
+## 6 #337 【树形dp/dfs】
+https://leetcode.cn/problems/house-robber-iii/description/  
+打家劫舍再升级，这次变成树形DP，树形dp就是基于dfs后续遍历，左右根，来取dp值  
+```python3
+class Solution:
+    def rob(self, root: Optional[TreeNode]) -> int:
+        def dfs(node):
+            if not node:
+                return (0,0)
+            l1, l2 = dfs(node.left)
+            r1,r2 = dfs(node.right)
+            rob = l2 + r2 + node.val 
+            not_rob = max(l1,l2) + max(r1,r2)
+            return (rob, not_rob)
+        return max(dfs(root))
+```
+## 7 #2560 【dp/二分/最小化最大值】
+https://leetcode.cn/problems/house-robber-iv/description/  
+打家劫舍第四版，除了dp外，结合了二分。  
+遇到了最小化最大值，或者最大化最小值的问题时，可以用二分去快速逼近答案。  
+dp套路不变，看是否满足 小于当前规定的mx值，如果满足可以选，然后依然分为 选/不选 当前位置两种情况。  
+```python3
+class Solution:
+    def minCapability(self, nums: List[int], k: int) -> int:
+        n = len(nums)
+        if n == 1:
+            return nums[0]
+        def check(mx):
+            dp = [0 for _ in range(n)]
+            dp[0] = 1 if nums[0] <= mx else 0
+            dp[1] = 1 if min(nums[0],nums[1]) <= mx else 0
+            for i in range(2,n):
+                if nums[i] <= mx:
+                    dp[i] = max(dp[i-2] + 1, dp[i-1])
+                else:
+                    dp[i] = dp[i-1]
+            return dp[-1]
+        l, r = 0, max(nums)
+        while l < r:
+            mid = l + (r-l) // 2
+            if check(mid) >= k:
+                r = mid 
+            else:
+                l = mid + 1
+        return l
+```          
+
+## 8 #1167 【优先队列/堆】
+https://leetcode.cn/problems/minimum-cost-to-connect-sticks/description/?envType=study-plan-v2&envId=premium-algo-100
+没啥说的，题目描述都就差直接告诉你要用优先队列了  
+```python3
+class Solution:
+    def connectSticks(self, sticks: List[int]) -> int:
+        ans = 0
+        heapq.heapify(sticks)
+        while len(sticks) > 1:
+            x = heapq.heappop(sticks)
+            y = heapq.heappop(sticks)
+            ans += x + y  
+            heapq.heappush(sticks,x+y)
+        return ans 
+```
