@@ -1151,3 +1151,29 @@ class Solution:
             heapq.heappush(sticks,x+y)
         return ans 
 ```
+## 9 #1057 【优先队列/模拟】
+https://leetcode.cn/problems/campus-bikes/description/?envType=study-plan-v2&envId=premium-algo-100  
+
+把距离入队，优先距离小的两者出栈，赋值，如果自行车已经被分配，则继续下面的队列头出队。
+```python3
+        def cal(a,b,x,y):
+            return abs(a - x) + abs(b - y)
+        n = len(workers)
+        m = len(bikes)
+        dis = []
+        for i in range(n):
+            a,b = workers[i]
+            for j in range(m):
+                x,y = bikes[j]
+                heapq.heappush(dis,(cal(a, b, x, y), i, j))
+        ans = [-1 for _ in range(n)]
+        used = [0 for _ in range(m)]
+        cnt = 0
+        while dis and cnt < n:
+            _,i,j = heapq.heappop(dis)
+            if ans[i] == -1 and used[j] == 0:
+                used[j] = 1
+                ans[i] = j
+                cnt += 1
+        return ans 
+```
