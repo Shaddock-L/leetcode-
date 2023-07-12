@@ -1177,3 +1177,93 @@ https://leetcode.cn/problems/campus-bikes/description/?envType=study-plan-v2&env
                 cnt += 1
         return ans 
 ```
+# 7月12日
+## 1 #2544 【数组/数学】
+https://leetcode.cn/problems/alternating-digit-sum/description/  
+没啥说的。
+```python3
+class Solution:
+    def alternateDigitSum(self, n: int) -> int:
+        arr = []
+        num = n 
+        while num:
+            arr.append(num%10)
+            num //= 10
+        arr = arr[::-1]
+        return sum(arr[::2]) - sum(arr[1::2])
+```              
+## 2 #499
+https://leetcode.cn/problems/the-maze-iii/description/?envType=study-plan-v2&envId=premium-algo-100  
+&emsp;&emsp;迷宫Ⅲ。同样是要碰壁才能改变方向，但是第一个方法没有用到最短路径算法，没有记录每个点距离起点的最近路径长度。而是用BFS一层一层搜。  
+&emsp;&emsp;并且同时用一个visit数组记录，每个点在四个方向上是否到达过。使用set记录，如果某个带着某个方向之前到达过这个点，那么就不重新入队，因为已经不是最短路径了，但是如果是从别的方向过来的，则入队，因为不确定之后的路径会不会更短。  
+如果不碰壁。
+
+```python3
+class Solution:
+    def findShortestWay(self, maze: List[List[int]], ball: List[int], hole: List[int]) -> str:
+        visit = defaultdict(set)
+        m,n = len(maze), len(maze[0])
+        dirs = {'u':(-1,0), 'd':(1,0), 'l':(0,-1), 'r':(0,1)}
+        ans = 'z'
+        def valid(x,y):
+            return 0 <= x < m and 0 <= y < n and not maze[x][y]
+        q = [[ball[0] + dirs[d][0], ball[1] + dirs[d][1], d] for d in dirs if valid(ball[0] + dirs[d][0],ball[1] + dirs[d][1])]
+        while q and ans == 'z':
+            size = len(q)
+            for _ in range(size):
+                x,y,path = q.pop(0)
+                visit[(x,y)].add(path[-1])
+                if [x,y] == hole:
+                    ans = min(ans,path)  
+                    continue   
+                a, b = x + dirs[path[-1]][0], y + dirs[path[-1]][1]
+                if valid(a,b):
+                    if path[-1] not in visit[(a,b)]:
+                        q.append([a,b,path])
+                else:
+                    for d in dirs:
+                        if d == path[-1]:
+                            continue  
+                        a,b =  x + dirs[d][0], y + dirs[d][1]
+                        if valid(a,b):
+                            if d not in visit[(a,b)]:
+                                q.append([a,b,path + d])
+        return ans if ans != 'z' else 'impossible'
+```
+
+## 3 #276 【DP】
+https://leetcode.cn/problems/paint-fence/description/?envType=study-plan-v2&envId=premium-algo-100  
+两种情况，异色，同色。分类讨论即可
+```python3 
+class Solution:
+    def numWays(self, n: int, k: int) -> int:
+        if n < 2:
+            return k
+        dp = [[0,0] for _ in range(n+1)]
+        dp[0][1] = k   
+        dp[1][0] = k
+        dp[1][1] = k*(k-1)
+        for i in range(2,n+1):
+            dp[i][0] = dp[i-1][1]
+            dp[i][1] = (k-1)*dp[i-1][0] + (k-1) * dp[i-1][1]
+        return sum(dp[n-1])
+```
+
+## 4 #256 【DP】
+https://leetcode.cn/problems/paint-house/description/?envType=study-plan-v2&envId=premium-algo-100  
+三种情况，不能连续同色，当前看 前一家另外两种颜色的情况。简单。
+```python3
+class Solution:
+    def minCost(self, costs: List[List[int]]) -> int:
+        n = len(costs)
+        if n == 1:
+            return min(costs[0])
+        dp = [[float('inf'),float('inf'),float('inf')] for _ in range(n)]
+        dp[0] = costs[0]
+        for i in range(1,n):
+            dp[i][0] = min(dp[i-1][1],dp[i-1][2]) + costs[i][0]
+            dp[i][1] = min(dp[i-1][0],dp[i-1][2]) + costs[i][1]
+            dp[i][2] = min(dp[i-1][1],dp[i-1][0]) + costs[i][2]
+        return min(dp[-1])
+
+```
