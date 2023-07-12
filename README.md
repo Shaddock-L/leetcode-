@@ -1196,7 +1196,7 @@ class Solution:
 https://leetcode.cn/problems/the-maze-iii/description/?envType=study-plan-v2&envId=premium-algo-100  
 &emsp;&emsp;迷宫Ⅲ。同样是要碰壁才能改变方向，但是第一个方法没有用到最短路径算法，没有记录每个点距离起点的最近路径长度。而是用BFS一层一层搜。  
 &emsp;&emsp;并且同时用一个visit数组记录，每个点在四个方向上是否到达过。使用set记录，如果某个带着某个方向之前到达过这个点，那么就不重新入队，因为已经不是最短路径了，但是如果是从别的方向过来的，则入队，因为不确定之后的路径会不会更短。  
-如果不碰壁。
+如果不碰壁,就不改变方向地入队，如果碰壁，则更换方向，并更新path入队。
 
 ```python3
 class Solution:
