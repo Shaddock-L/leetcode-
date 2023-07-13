@@ -1267,3 +1267,116 @@ class Solution:
         return min(dp[-1])
 
 ```
+# 7月13日
+## 1 #931 【dp】
+https://leetcode.cn/problems/minimum-falling-path-sum/  
+中等难度dp，乱杀！看坐标是否valid,然后和上面一行三个相邻的值作比较。  
+```python3
+class Solution:
+    def minFallingPathSum(self, matrix: List[List[int]]) -> int:
+        m , n = len(matrix), len(matrix[0])
+        def valid(x,y):
+            return 0 <= x < m and 0 <= y < n  
+        dp = [[float('inf') for _ in range(n)] for _ in range(m)]
+        dp[0] = matrix[0]
+        for i in range(1,m):
+            for j in range(n):
+                lr, lc = i-1, j-1  
+                mr, mc = i-1, j 
+                rr, rc = i-1, j+1
+                if valid(lr, lc):
+                    dp[i][j] = min(dp[i][j], dp[lr][lc] + matrix[i][j])
+                if valid(mr, mc):
+                    dp[i][j] = min(dp[i][j], dp[mr][mc] + matrix[i][j])
+                if valid(rr, rc):
+                    dp[i][j] = min(dp[i][j], dp[rr][rc] + matrix[i][j])
+        return min(dp[-1])
+```
+
+## 2 #265 【dp】
+和粉刷房子Ⅰ一样，就是不取和自己相同颜色就行。  
+```python3
+class Solution:
+    def minCostII(self, costs: List[List[int]]) -> int:
+        m, n = len(costs), len(costs[0])
+        dp = [[float('inf') for _ in range(n)] for _ in range(m)]
+        dp[0] = costs[0]
+        for i in range(1,m):
+            for j in range(n):
+                if j == 0:
+                    dp[i][j] = min(dp[i-1][1:]) + costs[i][j]
+                elif j == n-1:
+                    dp[i][j] = min(dp[i-1][:-1]) + costs[i][j]
+                else:
+                    dp[i][j] = min(min(dp[i-1][:j]), min(dp[i-1][j+1:])) + costs[i][j]
+        return min(dp[-1])
+```
+## 3 #651 【dp】
+https://leetcode.cn/problems/4-keys-keyboard/description/?envType=study-plan-v2&envId=premium-algo-100  
+增加一个，或者从大于3次操作后，选择一次操作，到当前下标-2处（因为前面需要用CTRL-A 和CTRL-C) 选一个下标开始ctrl-v，取最大值。
+
+```python3
+class Solution:
+    def maxA(self, n: int) -> int:
+        # 0:A, 1:ctrl+A, 2:ctrl+C, 3: ctrl+V
+        dp = [[0,0,0,0] for _ in range(51)]
+        dp[1] = [1,0,0,0]
+        dp[2] = [2,1,0,0]
+        for i in range(3,51):
+            dp[i][0] = max(dp[i - 1]) + 1
+            # 执行Ctrl-A操作
+            dp[i][1] = max(dp[i - 1])
+            # 执行Ctrl-C操作
+            dp[i][2] = max(dp[i - 2])
+            # 执行Ctrl-V操作
+            dp[i][3] = max(max(dp[j]) * (i - j - 1) for j in range(i - 2))
+        return max(dp[n])
+
+```
+
+
+## 4 #1180 【数学/双指针】
+https://leetcode.cn/problems/count-substrings-with-only-one-distinct-letter/?envType=study-plan-v2&envId=premium-algo-100  
+
+用双指针找从当前下标开始的，最长的符合条件的【单一字母】字串，这个长度的字串能过够分为n *(n+1)//2个  [1+2+3+4+/....等差数列求和]  字串。
+```python3
+class Solution:
+    def countLetters(self, s: str) -> int:
+        #最长为n， 则分割为单一字母的字串可以有 n *(n+1)//2个  [1+2+3+4+/....等差数列求和]
+        cnt = 0
+        left,right = 0, 0
+        while right < len(s):
+            if s[right] != s[left]:
+                #开始算上 最长单一字母，的字串
+                cnt += (right - left) * (right - left + 1) // 2  # 统计符合条件的子串数量
+                left = right  
+            right += 1
+        cnt += (right - left) * (right - left + 1) // 2  # 统计符合条件的子串数量、
+        return cnt
+```
+
+## 5 #348 【设计/数组/哈希表/矩阵】
+https://leetcode.cn/problems/design-tic-tac-toe/   
+题目给的数据没有出现重复的坐标，所以直接计数就可以。
+```python3
+class TicTacToe:
+
+    def __init__(self, n: int):
+        self.r = [[0,0] for _ in range(n)]
+        self.c = [[0,0] for _ in range(n)]
+        self.pie = [0,0]
+        self.na = [0,0]
+        self.n = n
+
+
+    def move(self, row: int, col: int, player: int) -> int:
+        self.r[row][player-1] += 1
+        self.c[col][player-1] += 1
+        if row == col:
+            self.na[player-1] += 1
+        if row + col == self.n - 1:
+            self.pie[player-1] += 1
+        if self.r[row][player-1] == self.n or self.c[col][player-1] == self.n or self.pie[player-1] == self.n or self.na[player-1] == self.n:
+            return player
+        return 0
+```
